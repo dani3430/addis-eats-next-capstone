@@ -35,6 +35,7 @@ export async function GET(request) {
   authorizationUrl.searchParams.set("state", state);
   authorizationUrl.searchParams.set("code_challenge", challenge);
   authorizationUrl.searchParams.set("code_challenge_method", "S256");
+  authorizationUrl.searchParams.set("prompt", "select_account");
 
   const response = NextResponse.redirect(authorizationUrl);
   const options = cookieOptions();
