@@ -1,0 +1,156 @@
+@import "tailwindcss";
+
+/* The app is designed as a light theme, so ignore the OS dark mode. */
+:root {
+  color-scheme: light;
+}
+
+/* Keep keyboard focus visible even when a component has focus utility classes. */
+:focus-visible {
+  outline: 3px solid #1c1917;
+  outline-offset: 2px;
+}
+/* Day 48: keep a focused element from hiding under the sticky header. */
+html {
+  scroll-padding-top: 5rem;
+}
+/* Day 48: touch targets of at least 44 x 44 px. */
+@layer base {
+  button,
+  select {
+    min-height: 44px;
+  }
+  button {
+    min-width: 44px;
+  }
+  summary {
+    min-height: 44px;
+    padding-block: 12px;
+  }
+  /* Standalone links: nav, cards, tables, link-buttons. Links inside a sentence
+     and the map's own widgets are left alone. */
+  header a,
+  main a:not(p a, .leaflet-container a) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: 44px;
+  }
+  footer a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
+
+/* Leaflet's zoom buttons are 30px. "html" in front makes this beat Leaflet's own selector. */
+html .leaflet-container .leaflet-bar a {
+  width: 44px;
+  height: 44px;
+  line-height: 44px;
+}
+
+html .leaflet-container a.leaflet-popup-close-button {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  line-height: 44px;
+}
+
+html .leaflet-container .leaflet-control-attribution a {
+  display: inline-flex;
+  align-items: center;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+a[href="#main"] {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] body {
+  background-color: #17130f;
+  color: #f5f5f4;
+}
+
+html[data-theme="dark"] [class~="bg-white"],
+html[data-theme="dark"] [class~="bg-white/95"] {
+  background-color: #211c17;
+}
+
+html[data-theme="dark"] [class~="bg-amber-50"],
+html[data-theme="dark"] [class~="bg-amber-50/40"],
+html[data-theme="dark"] [class~="bg-amber-50/50"],
+html[data-theme="dark"] [class~="bg-amber-50/60"],
+html[data-theme="dark"] [class~="bg-amber-100"],
+html[data-theme="dark"] [class~="bg-amber-100/60"] {
+  background-color: #2b241c;
+}
+
+html[data-theme="dark"] [class~="text-stone-900"],
+html[data-theme="dark"] [class~="text-stone-800"],
+html[data-theme="dark"] [class~="text-stone-700"],
+html[data-theme="dark"] [class~="text-stone-600"],
+html[data-theme="dark"] [class~="text-stone-500"] {
+  color: #e7e5e4;
+}
+
+html[data-theme="dark"] [class~="text-amber-800"],
+html[data-theme="dark"] [class~="text-amber-700"] {
+  color: #fbbf24;
+}
+
+html[data-theme="dark"] [class~="border-amber-100"],
+html[data-theme="dark"] [class~="border-amber-200"] {
+  border-color: #51402b;
+}
+
+html[data-theme="dark"] table {
+  color: #e7e5e4;
+}
+
+html[data-theme="dark"] table thead {
+  background-color: #382c1d;
+  color: #f5f5f4;
+}
+
+html[data-theme="dark"] table tbody tr:nth-child(odd) {
+  background-color: #211c17;
+}
+
+html[data-theme="dark"] table tbody tr:nth-child(even) {
+  background-color: #2b241c;
+}
+
+html[data-theme="dark"] table tbody tr:hover {
+  background-color: #44331f;
+}
+
+html[data-theme="dark"] table tbody tr {
+  border-color: #51402b;
+}
+
+html[data-theme="dark"] [class~="bg-amber-600"]:hover,
+html[data-theme="dark"] [class~="hover:bg-amber-600"]:hover {
+  background-color: #92400e;
+  color: #fff;
+}
+
+html[data-theme="dark"] .site-nav-links {
+  scrollbar-width: thin;
+  scrollbar-color: #786044 transparent;
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+  background-color: #211c17;
+  color: #f5f5f4;
+  border-color: #51402b;
+}
