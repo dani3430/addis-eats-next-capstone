@@ -1,93 +1,67 @@
 # Performance: evidence and trade-offs
 
-## What the available measurements say
+## What the measurements say
 
-These are historical readings recorded during Days 43–45. They are not a
-current benchmark of the code in this checkout and are not a guarantee for a
-new deployment.
+The Day 43–45 readings are historical. They are not a benchmark of the current
+checkout and not a guarantee for a new deployment. They should not be called
+current unless Lighthouse is rerun against the exact commit and URL.
 
-| Home-page measure | Day 43 baseline | Day 45 local production | Day 45 Vercel |
-| --- | ---: | ---: | ---: |
-| Lighthouse performance | 71 | 87 | 94 |
-| LCP | 6.1 s | 2.9 s median | 1.8 s median |
-| CLS | 0 | 0 | 0 |
-| Hero image | 1.2 MB source | 66 kB served | Not recorded |
-| `/menu` JavaScript transferred | Not recorded | 171 kB | 173 kB |
+| Home-page measure      | Day 43 baseline | Day 45 local production | Day 45 Vercel |
+| ---------------------- | --------------: | ----------------------: | ------------: |
+| Lighthouse performance |              71 |                      87 |            94 |
 
-The recorded local menu JavaScript was above the then-used 120 kB target.
-Lighthouse LCP varied between runs; an earlier three-run median was 3.3 seconds.
-Treat small differences as noise.
+The local menu JavaScript was above the then-used 120 kB target (171–173 kB).
+LCP varied between runs; an earlier three-run median was 3.3 seconds. Treat
+small differences as noise.
 
-An additional Lighthouse result shared on October 13, 2026 reported a
-performance score of 74, FCP 0.9 s, LCP 3.5 s, TBT 680 ms, CLS 0.002, and Speed
-Index 1.2 s. The excerpt did not identify the audited route or LCP element, so
-it is a provisional baseline rather than a directly comparable homepage
-measurement. Lighthouse also warned that IndexedDB data may affect the run.
-This app does not use IndexedDB; repeat the audit in an Incognito window before
-comparing results.
+An October 13, 2026 result (score 74, FCP 0.9 s, LCP 3.5 s, TBT 680 ms, CLS
+0.002, Speed Index 1.2 s) did not identify the audited route or LCP element, so
+it is only a provisional baseline. Lighthouse warned that IndexedDB data may
+affect the run; this app does not use IndexedDB, so repeat audits in Incognito.
+
+An October 14, 2026 run audited the final checkout once on a local production
+build and once on Vercel. The route, device profile and throttling were not
+recorded, so treat the columns as a rough comparison.
+
+| Measure                  | Local production build | Vercel |
+| ------------------------ | ---------------------: | -----: |
+| Lighthouse performance   |                     92 |     92 |
+| First Contentful Paint   |                  0.8 s |  1.2 s |
+| Largest Contentful Paint |                  2.6 s |  1.9 s |
+| Total Blocking Time      |                 260 ms | 300 ms |
+| Cumulative Layout Shift  |                  0.002 |  0.103 |
+| Speed Index              |                  0.8 s |  2.5 s |
+
+Vercel had the faster LCP but a slower FCP and Speed Index. Its layout shift of
+0.103 is just above the 0.1 "good" threshold, and the cause has not been
+investigated. Each figure is a single run, not a median.
 
 ## What improved the result
 
-- The oversized hero image was replaced/served in a smaller optimized form;
-  this was the largest recorded improvement to LCP.
-- Images have explicit dimensions so the browser can reserve layout space.
-- `next/font` serves the configured font locally, avoiding a third-party font
-  request.
-- The home page and menu retain static rendering where the data allows it;
-  menu updates use API requests rather than making the entire route dynamic.
-- Charts are rendered only on staff pages; they do not add chart code to the
-  public home page.
-- Google sign-in uses a native server-rendered link and server-side OAuth
-  redirects rather than loading Google's client SDK on page load. This keeps
-  third-party authentication JavaScript out of the sign-in page's critical
-  rendering path.
-- The first menu dish image is prioritized because it can be the menu page's
-  LCP element; later menu and home-special images remain lazy-loaded so they
-  do not compete with the homepage hero image.
-- The static menu's first page now renders its filters and dish cards in the
-  initial HTML. URL page state is synchronized after hydration, avoiding a
-  client-rendered fallback for the whole menu while keeping client-side
-  filtering and pagination.
-- Responsive image `sizes` match the content gutters and grid columns more
-  closely, avoiding requests for unnecessarily wide variants on small screens.
-- The homepage hero source is now a 1200-by-1200 WebP at about 144 KiB, down
-  from the 1600-by-1600 JPEG at about 293 KiB. The image remains eagerly
-  prioritized. For the 1080-pixel, quality-75 WebP variant, the local Next.js
-  image optimizer returned 119,868 bytes from the new source versus 139,652
-  bytes from the old one (about 14% fewer bytes). This is a local image
-  response comparison, not a Lighthouse LCP measurement.
-- The shared account header now uses a cancellable native fetch instead of
-  SWR for its single session request. SWR remains on the menu, where it is used
-  for interactive filtering and pagination, but is no longer pulled into every
-  route just for the account status.
-
-## What to say in the presentation
-
-“The historical home-page Lighthouse score moved from 71 to 87 locally and 94
-on the recorded Vercel run. The largest cause was reducing the hero-image
-payload, with image dimensions helping layout stability. These are Day 43–45
-measurements, not a fresh run on today's checkout, and the menu bundle was
-still 171–173 kB, above the old 120 kB target.”
-
-Do not call those numbers current unless Lighthouse is rerun against the exact
-commit and URL being presented.
+- **Hero image:** a 1600×1600 JPEG (about 293 KiB) became a 1200×1200 WebP
+  (about 144 KiB), still eagerly loaded. This was the largest recorded LCP
+  improvement. Locally the optimizer returned about 14% fewer bytes
+  (119,868 vs 139,652); that is a size comparison, not an LCP measurement.
+- **Layout:** images have explicit dimensions, and responsive `sizes` avoid
+  requesting unnecessarily wide variants on small screens.
+- **Fonts:** `next/font` serves the font locally, with no third-party request.
+- **Rendering:** the home page and menu stay static where the data allows it,
+  and the menu's first page is in the initial HTML. Only the first dish image is
+  prioritized; later images are lazy-loaded.
+- **Less JavaScript:** charts load only on staff pages, Google sign-in is a
+  server-side redirect with no client SDK, and the account header uses a native
+  fetch instead of SWR, which now stays on the menu only.
 
 ## Reproduce a current measurement
 
-1. Build and serve a production build (`npm run build`, then `npm run start`).
-2. Use Chrome Incognito and Lighthouse Mobile with the same throttling settings
-   for each run.
-3. Record at least three runs for LCP and report the median. Keep URL,
-   commit, date, Lighthouse version, device profile, and network/CPU throttling
-   with the results.
-4. Repeat against the exact deployed URL and commit. Do not compare a local
-   run to a deployment without stating the conditions.
+1. Run `npm run build`, then `npm run start`.
+2. Use Chrome Incognito and Lighthouse Mobile with the same throttling each run.
+3. Record at least three runs and report the median LCP, with the URL, commit,
+   date, Lighthouse version, device profile and throttling.
+4. Repeat on the exact deployed URL and commit. Never compare a local run with
+   a deployment without stating the conditions.
 
-No current Lighthouse run is claimed in this document. Deployment and live
-post-deployment verification must be completed separately; see
+The October 14 runs are single runs; no three-run median has been recorded.
+Image-priority and `sizes` changes are intended optimizations, not measured LCP
+results. Deployment and live verification are covered separately in
 [README.md](./README.md).
-
-The current source image files and generated Next.js variants have not been
-re-benchmarked as part of these code changes. Verify the impact with the
-production-build procedure above; image-priority and `sizes` changes are
-intended optimizations, not a measured LCP result.
